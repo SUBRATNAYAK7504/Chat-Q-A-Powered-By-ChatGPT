@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Chat with ChatGPT</title>
+	<style>
+		body {
+			background-color: #eddada;
+			font-family: Arial, sans-serif;
+		}
+		h1 {
+			text-align: center;
+			margin-top: 50px;
+			margin-bottom: 20px;
+		}
+		.container {
+			max-width: 600px;
+			margin: 0 auto;
+			padding: 20px;
+			background-color: #fff;
+			border-radius: 10px;
+			box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+		}
+		input[type="text"] {
+			width: 100%;
+			padding: 10px;
+			border-radius: 5px;
+			border: 1px solid #ddd;
+			margin-bottom: 10px;
+			box-sizing: border-box;
+			font-size: 16px;
+		}
+		button {
+			background-color: #4CAF50;
+			color: #fff;
+			padding: 10px 20px;
+			border-radius: 5px;
+			border: none;
+			cursor: pointer;
+			font-size: 16px;
+		}
+		button:hover {
+			background-color: #3e8e41;
+		}
+		.chat-log {
+			max-height: 400px;
+			overflow-y: scroll;
+			margin-top: 20px;
+			padding: 10px;
+			background-color: #f1f1f1;
+			border-radius: 5px;
+			font-size: 16px;
+			
+		}
+		.chat-log p {
+			margin: 0 0 10px;
+		}
+		.user-message {
+			background-color: #e6f7ff;
+			padding: 10px;
+			border-radius: 5px;
+			margin-bottom: 10px;
+			display: inline-block;
+			max-width: 80%;
+			text-align: right;
+		}
+		.bot-message {
+			background-color: #fff;
+			padding: 10px;
+			border-radius: 5px;
+			margin-bottom: 10px;
+			display: inline-block;
+			max-width: 80%;
+			text-align: left;
+		}
+		.loading-spinner {
+			display: none;
+			position: relative;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+		}
+
+		.loading-spinner .spinner-border {
+			width: 10rem;
+			height: 5rem;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>Chat with ChatGPT</h1>
+		<h5 style = "color: gray">Developed By: Subrat Nayak </h5><h6 style="color: gray">Version: 1.0</h6>
+		
+		<div class="chat-log">
+			<!-- Chat history will be displayed here -->
+		</div>
+		<div class="loading-spinner">
+			<div class="spinner-border text-primary" role="status">
+				<br></br>
+				<span class="visually-hidden"><h4>Loading Response...</h4></span>
+				<br></br>
+			</div>
+		</div>
+		<form id="chat-form" method="POST">
+			<input type="text" name="message" placeholder="Type your message here...">
+			<button type="submit">Send</button>
+		</form>
+	</div>
+
+	<script>
+        // Define function to add a message to the chat log
+        function addMessageToLog(message, messageType) {
+            // Get the chat log element
+            var chatLog = document.querySelector(".chat-log");
+
+            // Create a new message element
+            var messageElement = document.createElement("p");
+
+            // Set the text content of the message element
+            if (messageType === "user") {
+                messageElement.innerHTML = "You: " + message + "<br>";
+            } else if (messageType === "bot") {
+                messageElement.innerHTML = "Bot: " + message + "<br>";
+            }
+
+            // Add the appropriate class to the message element
+            if (messageType === "user") {
+                messageElement.classList.add("user-message");
+            } else if (messageType === "bot") {
+                messageElement.classList.add("bot-message");
+            }
+
+            // Append the message element to the chat log
+            chatLog.appendChild(messageElement);
+
+            // Add a <br> element after the message
+            var lineBreak = document.createElement("br");
+            chatLog.appendChild(lineBreak);
+
+            // Scroll to the bottom of the chat log
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+		// Define function to show the loading spinner
+		function showLoadingSpinner() {
+			var spinner = document.querySelector(".loading-spinner");
+			spinner.style.display = "block";
+		}
+
+		// Define function to hide the loading spinner
+		function hideLoadingSpinner() {
+			var spinner = document.querySelector(".loading-spinner");
+			spinner.style.display = "none";
+		}
+
+        // Define function to handle form submission
+        function handleFormSubmit(event) {
+            // Prevent the form from submitting
+            event.preventDefault();
+    
+            // Get the form and message input elements
+            var form = document.getElementById("chat-form");
+            var messageInput = form.elements["message"];
+    
+            // Get the user's message from the input element
+            var message = messageInput.value;
+    
+            // Add the user's message to the chat log
+            addMessageToLog(message, "user");
+			// Show the loading spinner
+			showLoadingSpinner();
+
+            // Send the user's message to the server and get a response
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/api/chat", true);
+            xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    // Add the bot's message to the chat log
+                    var response = JSON.parse(xhr.responseText);
+                    addMessageToLog(response.message, "bot");
+					hideLoadingSpinner() 
+
+                } else {
+                    // Handle the error
+                    console.error(xhr.statusText);
+                }
+            };
+            xhr.onerror = function() {
+                // Handle the error
+                console.error(xhr.statusText);
+            };
+            xhr.send(JSON.stringify({ message: message }));
+            
+            // Clear the message input
+            messageInput.value = "";
+        }
+    
+        // Add event listener to form submit event
+        document.getElementById("chat-form").addEventListener("submit", handleFormSubmit);
+    </script>
+</body>
+</html>    
